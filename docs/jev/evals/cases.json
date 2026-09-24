@@ -1,0 +1,32 @@
+[
+  {
+    "id": "item-ativo",
+    "state": { "sku": "agua-20", "active": true },
+    "question": "O item está ativo?",
+    "type": "noul",
+    "evidenceRefs": ["produto:1"],
+    "expected": { "type": "noul", "answer": true, "probability": 0.96, "confidence": 0.91 }
+  },
+  {
+    "id": "forma-pagamento",
+    "state": { "methods": ["pix", "dinheiro", "cartao"] },
+    "question": "Qual forma de pagamento o texto indica?",
+    "type": "choice",
+    "options": ["pix", "dinheiro", "cartao"],
+    "evidenceRefs": ["texto:1"],
+    "expected": {
+      "type": "choice",
+      "choice": "pix",
+      "probabilities": { "pix": 0.91, "dinheiro": 0.06, "cartao": 0.03 },
+      "confidence": 0.9
+    }
+  },
+  {
+    "id": "risco-pedido",
+    "state": { "qty": 2 },
+    "question": "Qual o score de consistência do pedido?",
+    "type": "score",
+    "evidenceRefs": ["pedido:rascunho"],
+    "expected": { "type": "score", "score": 87, "confidence": 0.88 }
+  }
+]

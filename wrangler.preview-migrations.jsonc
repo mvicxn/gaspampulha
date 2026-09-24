@@ -1,0 +1,10 @@
+{
+  "d1_databases": [
+    {
+      "binding": "PREVIEW_DB",
+      "database_name": "gaspampulha-preview",
+      "database_id": "6fb672ad-dae3-424c-b01f-b287b1ea2aa5",
+      "migrations_dir": "migrations"
+    }
+  ]
+}

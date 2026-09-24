@@ -1,0 +1,33 @@
+{
+  "name": "gaspampulha",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build && npm run verify:assets",
+    "verify:assets": "node scripts/assert-no-secrets-in-assets.mjs",
+    "test": "tsc -p tsconfig.tests.json && node --test dist-tests/tests/*.test.js",
+    "preview:local": "vite preview",
+    "deploy": "node scripts/guard-remote.mjs production",
+    "preview": "node scripts/guard-remote.mjs preview",
+    "secret-scan": "node scripts/secret-scan.mjs",
+    "benchmark:password": "node scripts/benchmark-password.mjs",
+    "admin:create": "node scripts/create-admin.mjs"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.7.0",
+    "@cloudflare/workers-types": "^5.20260921.1",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0",
+    "wrangler": "^4.20.0"
+  }
+}

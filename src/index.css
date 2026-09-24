@@ -1,0 +1,201 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color: #172018;
+  background: #f4f6f2;
+  line-height: 1.4;
+}
+
+body {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  min-height: 44px;
+  min-width: 44px;
+  border: 1px solid #1f4d32;
+  background: #fff;
+  border-radius: 8px;
+}
+
+.top,
+main {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.top {
+  padding-bottom: 0;
+}
+
+.mark {
+  margin: 0;
+  color: #3d5c49;
+  font-size: 0.9rem;
+}
+
+h1 {
+  margin: 0.2rem 0 0;
+  font-size: 1.6rem;
+}
+
+h2 {
+  font-size: 1.2rem;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.card,
+.cart,
+.error {
+  background: #fff;
+  border-radius: 12px;
+  padding: 0.9rem;
+}
+
+.card h3,
+.price,
+.muted,
+.total {
+  margin: 0.2rem 0;
+}
+
+.price,
+.total {
+  font-weight: 700;
+}
+
+.qty {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.6rem 0;
+}
+
+.add,
+.continue,
+.error button {
+  background: #1f4d32;
+  color: #fff;
+  width: 100%;
+}
+
+.cart ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cart li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.4rem 0.6rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid #e4e8e2;
+}
+
+.cart li button {
+  grid-column: 1 / -1;
+}
+
+.error p,
+.error-text {
+  margin-top: 0;
+}
+
+.form,
+fieldset {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.form label,
+fieldset label {
+  display: grid;
+  gap: 0.25rem;
+}
+
+input,
+textarea {
+  font: inherit;
+  min-height: 44px;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #c5cdc4;
+  border-radius: 8px;
+}
+
+.continue.link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  margin-top: 1rem;
+}
+
+.admin-nav {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-nav a {
+  color: #1f4d32;
+}
+
+.admin-bar,
+.filters,
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.order-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.order-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 0.9rem;
+}
+
+.code {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.order-card.is-new {
+  border: 2px solid #1f4d32;
+}
+
+.meta {
+  white-space: pre-wrap;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+}
+
+select {
+  min-height: 44px;
+  font: inherit;
+}
+
+@media (min-width: 800px) {
+  .order-list {
+    display: block;
+  }
+
+  .order-card {
+    display: grid;
+    grid-template-columns: 8rem 1fr auto;
+    gap: 0.4rem 1rem;
+    align-items: start;
+  }
+}
