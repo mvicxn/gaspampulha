@@ -15,6 +15,10 @@ O caminho até publicar:
 9. Smoke test.
 10. Logs.
 
+A publicação de produção usa `wrangler deploy` direto, com `--secrets-file`. Não usa Version URL.
+
+O pedido de smoke test, se for criado depois do deploy, fica como registro de validação. Não há política de apagar pedido. Não remover esse registro com SQL avulso.
+
 O binding de desenvolvimento não leva `preview_database_id`: isso fez o `wrangler dev` abrir um SQLite vazio e o catálogo responder 500.
 
 ## Local

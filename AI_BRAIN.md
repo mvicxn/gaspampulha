@@ -8,16 +8,18 @@ Preview remoto ativo em `https://gaspampulha-rc-gaspampulha.magi-tools.workers.d
 
 # CURRENT PHASE
 
-Production Release Path Hardened.
+Production Final Gate — READY TO DEPLOY.
 
 # COMPLETED
 
-- Incident contained.
-- Exposed version removed.
-- Turnstile secret rotated.
-- Release architecture redesigned.
-- Direct deploy strategy.
-- Production predeploy gate.
+- Security incident closed.
+- Production D1 ready.
+- Production Turnstile ready.
+- Production secrets ready.
+- First admin created.
+- Production catalog bootstrap.
+- Release commit.
+- Predeploy gate.
 
 # IN PROGRESS
 
@@ -25,7 +27,7 @@ Nada.
 
 # NEXT ACTION
 
-Executar o pre-deploy gate e criar o primeiro admin de produção.
+Deploy controlado de produção após confirmação humana.
 
 # ARCHITECTURE
 
@@ -71,13 +73,13 @@ Ver `docs/decisions.md` e `docs/release.md`. Amostragem de log 1 para não perde
 
 # LAST CHANGE
 
-Incidente fechado no registro. Release deixa Version URL de fora. `workers_dev` true e `preview_urls` false no config. Sem deploy.
+Catálogo inicial aplicado só no D1 de produção. Arquivo temporário da senha do admin apagado. Sem deploy.
 
 # HANDOFF
 
 URL: `https://gaspampulha-rc-gaspampulha.magi-tools.workers.dev`. Banco de preview: `gaspampulha-preview`, id `6fb672ad-dae3-424c-b01f-b287b1ea2aa5`. Produção: `gaspampulha-production`, id `793f344d-b581-4d59-a46a-4e8525903180`.
 
-Hostname previsto: `gaspampulha.magi-tools.workers.dev`. `workers_dev` true e `preview_urls` false no config. O remoto ainda está com o subdomínio desligado até o deploy. Secrets de produção vão no `--secrets-file`, fora do Git. O salt antigo da versão exposta não será reusado. Incidente CLOSED. Deploy ainda pendente.
+Hostname previsto: `gaspampulha.magi-tools.workers.dev`. `workers_dev` true e `preview_urls` false no config. O remoto ainda está com o subdomínio desligado até o deploy. Secrets em `/tmp/gaspampulha-production-secrets.env`. A senha do admin `operador` está só em `/tmp/gaspampulha-production-admin.env`. Deploy ainda não rodou: `npx wrangler deploy --secrets-file /tmp/gaspampulha-production-secrets.env`, com `GASP_CONFIRM_DEPLOY` igual ao id do D1. Smoke test depois: health, catálogo, um pedido, login, status e logout. Rollback é não repetir o deploy e voltar o subdomínio se precisar.
 
 Observabilidade: painel do preview `gaspampulha-rc`. Não usar `wrangler tail`. A API de telemetry desta conta respondeu 10000, então o JSON do log não foi lido por aqui.
 

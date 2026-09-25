@@ -8,7 +8,7 @@ Dois canais, com papéis diferentes.
 
 O logger redige chaves de senha, hash, token, cookie, Authorization, Turnstile, segredo, telefone e endereço. O cliente não recebe stack.
 
-Não há serviço externo de log e não há banco separado para log de request. A consulta é o painel de Workers Logs, filtrando pelo `request_id`. Produção, quando existir, usa o mesmo painel no script `gaspampulha`, não no preview. Sem tracing extra.
+Não há serviço externo de log e não há banco separado para log de request. A consulta é o painel de Workers Logs, filtrando pelo `request_id`. Produção, quando existir, usa o mesmo painel no script `gaspampulha`, não no preview. Sem tracing extra. No plano gratuito, Workers Logs fica em cerca de 200.000 eventos por dia e 3 dias de retenção. A amostragem continua 1.
 
 `wrangler tail` não aponta para Preview. O log do preview fica no painel do próprio preview: Workers, script `gaspampulha`, Previews, slug `gaspampulha-rc`, Observability. O deployment atual aparece na mesma página. Métricas de invocação ficam nesse painel, não num segundo Worker.
 

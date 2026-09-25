@@ -80,7 +80,7 @@ Depois, no painel: custom domain do Worker e o mesmo hostname no widget do Turns
 
 ## Dados
 
-Produção está sem pedidos, sem admin e sem auditoria. A migration `0006` inseriu só `delivery_whatsapp_number` vazio. A próxima carga de dados, ainda não executada, é `seed/seed.sql`: settings e produtos iniciais, sem senha e sem pedido. Não copiar dados do preview. O `wrangler dev` local passa a usar o nome `gaspampulha-production` para o SQLite local; o arquivo local antigo `gaspampulha` não foi apagado.
+`seed/seed.sql` já foi aplicado em produção. Há quatro produtos. `store_name` e `whatsapp_number` estão preenchidos pelo seed. `pix_key` e `delivery_whatsapp_number` continuam vazios. Há um admin. Não há pedidos nem auditoria. `delivery_whatsapp_number` vazio é pendência operacional. Não copiar dados do preview. O `wrangler dev` local passa a usar o nome `gaspampulha-production` para o SQLite local; o arquivo local antigo `gaspampulha` não foi apagado.
 
 ## Logs
 
