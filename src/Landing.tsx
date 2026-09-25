@@ -1,9 +1,25 @@
 import { useEffect, useState, type PointerEvent } from "react";
 
 type StoreContact = { name: string; whatsapp: string };
+type FromPrices = { agua: number | null; gas: number | null };
+
+function lowestCents(products: Array<{ price_cents?: number }>): number | null {
+  const cents = products
+    .map((product) => product.price_cents)
+    .filter((price): price is number => Number.isInteger(price) && price >= 0);
+  if (cents.length === 0) return null;
+  return Math.min(...cents);
+}
+
+function reais(cents: number): string {
+  const whole = Math.trunc(cents / 100).toLocaleString("pt-BR");
+  const frac = String(Math.abs(cents % 100)).padStart(2, "0");
+  return `R$ ${whole},${frac}`;
+}
 
 export default function Landing() {
   const [store, setStore] = useState<StoreContact | null>(null);
+  const [fromPrices, setFromPrices] = useState<FromPrices | null>(null);
 
   useEffect(() => {
     const existing = document.querySelector("link[data-gasp-font='archivo']");
@@ -19,9 +35,14 @@ export default function Landing() {
     const controller = new AbortController();
     fetch("/api/catalog", { signal: controller.signal })
       .then(async (response) => (response.ok ? response.json() : null))
-      .then((data: { store?: { name?: string; whatsapp?: string } } | null) => {
-        if (!data?.store?.name) return;
-        setStore({ name: data.store.name, whatsapp: data.store.whatsapp ?? "" });
+      .then((data: { store?: { name?: string; whatsapp?: string }; categories?: { agua?: Array<{ price_cents?: number }>; gas?: Array<{ price_cents?: number }> } } | null) => {
+        if (!data) return;
+        if (data.store?.name) setStore({ name: data.store.name, whatsapp: data.store.whatsapp ?? "" });
+        if (!data.categories) return;
+        setFromPrices({
+          agua: lowestCents(data.categories.agua ?? []),
+          gas: lowestCents(data.categories.gas ?? []),
+        });
       })
       .catch(() => undefined);
     return () => controller.abort();
@@ -58,13 +79,29 @@ export default function Landing() {
         <div className="choices">
           <a className="choice water" href="/#agua" onPointerDown={(event) => ripple(event, "water")}>
             <span>Água</span>
+            {fromPrices ? <small>{fromPrices.agua === null ? "em breve" : `a partir de ${reais(fromPrices.agua)}`}</small> : null}
             <small>Galões para a casa</small>
           </a>
           <a className="choice gas" href="/#gas" onPointerDown={(event) => ripple(event, "flame")}>
             <span>Gás</span>
+            {fromPrices ? <small>{fromPrices.gas === null ? "em breve" : `a partir de ${reais(fromPrices.gas)}`}</small> : null}
             <small>Botijão para a cozinha</small>
           </a>
         </div>
+        <ol className="steps">
+          <li>
+            <span>1</span>
+            Escolher o produto
+          </li>
+          <li>
+            <span>2</span>
+            Confirmar endereço e pagamento
+          </li>
+          <li>
+            <span>3</span>
+            Receber em casa
+          </li>
+        </ol>
         <p className="facts">Pagamento no Pix ou em dinheiro. A área e o horário entram no pedido.</p>
         <footer>
           <p>{store?.name ?? "Gaspampulha"}</p>
