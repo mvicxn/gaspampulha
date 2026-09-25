@@ -1,5 +1,77 @@
 # Decisões
 
+## Scan da árvore de trabalho
+
+J — Um segredo num arquivo novo passa batido se o scanner só lê o que já foi commitado.
+
+E — `scripts/secret-scan.mjs` percorre o diretório, pula `.git`, `node_modules`, `.wrangler` e `dist`, e informa arquivo, linha e tipo.
+
+V — Um `.env` falso em diretório temporário faz o comando sair 1 sem imprimir o valor. O mesmo diretório só com texto normal sai 0.
+
+## Guarda de produção
+
+J — Deploy com placeholder, sitekey de teste ou secret de teste publica a loja errada.
+
+E — `scripts/guard-remote.mjs` exige um alvo só, sem flag extra. Produção para no placeholder, na sitekey de teste e na secret de teste do arquivo local. `dist/` com segredo também para.
+
+V — O id de produção no config continua o placeholder. O alvo com argumento extra é recusado antes do Wrangler.
+
+## Admin e o commit de release
+
+J — O insert de admin e o commit precisam apontar para o banco certo e para uma árvore sem segredo.
+
+E — `create-admin.mjs production` para no placeholder. O segundo commit trava essas guardas.
+
+V — O teste do admin sai 1 sem chamar o Wrangler. `git status` fica limpo depois do commit.
+
+## Isolamento da produção
+
+J — O preview já tem dados. A loja real não pode nascer nesse banco.
+
+E — `wrangler.jsonc` mantém o id zero no binding principal e o id `6fb672ad-dae3-424c-b01f-b287b1ea2aa5` só em `previews`. `assertDeployment` recusa ids iguais.
+
+V — O teste `produção não pode usar o banco de preview` falha o alvo. `npm run deploy` para no placeholder. Nenhum `d1 create` de produção foi executado.
+
+## Ambiente explícito
+
+J — Tratar “não é preview” como produção mistura banco e Turnstile.
+
+E — `getDeploymentEnvironment` só aceita `local`, `preview` e `production`.
+
+V — O alvo `staging` cai em `ambiente ambíguo`.
+
+## Segredos separados
+
+J — Salt e secret de teste não servem para a loja.
+
+E — `assertDeployment` recusa sitekey de teste, secrets `1x`/`2x` e salt repetido no alvo `production`. Os valores não entram no Git.
+
+V — Os testes de Turnstile de teste e de secret ausente abortam.
+
+## Migration imutável
+
+J — O preview já aplicou `0001`–`0006`. Editar o arquivo muda o que um banco novo executa e não muda o que o preview já tem.
+
+E — `docs/production.md` manda criar arquivo novo. Não há comando de reset.
+
+V — Os seis arquivos seguem iguais aos aplicados no preview. `production-migrate` não chama o Wrangler.
+
+## Admin no banco certo
+
+J — Um insert de admin no D1 errado entrega a loja a quem não deve.
+
+E — `create-admin.mjs` exige o alvo. Preview é recusado. Produção para se o id ainda é o placeholder, antes do `wrangler d1 execute`.
+
+V — `node scripts/create-admin.mjs production` sai 1 com a mensagem de placeholder e não chama o Wrangler.
+
+## Turnstile de produção
+
+J — A chave que sempre passa não prova cliente real.
+
+E — Produção pede widget, hostname, sitekey e secret próprios. A sitekey fica em `vars`. A secret fica no Worker.
+
+V — O config atual ainda tem a sitekey de teste, e a guarda de deploy recusa esse valor.
+
 ## Âncora do release candidate
 
 J — Estabelecer uma âncora versionada antes da produção.

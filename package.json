@@ -13,7 +13,7 @@
     "preview": "node scripts/guard-remote.mjs preview",
     "secret-scan": "node scripts/secret-scan.mjs",
     "benchmark:password": "node scripts/benchmark-password.mjs",
-    "admin:create": "node scripts/create-admin.mjs"
+    "admin:create": "node scripts/create-admin.mjs local"
   },
   "dependencies": {
     "react": "^19.2.8",

@@ -2,6 +2,12 @@
 
 Este documento não afirma que o sistema é inviolável. Descreve o que o código faz hoje e o que continua dependente das fases de login e pedido.
 
+## Dois scans
+
+`npm run secret-scan` lê a árvore de trabalho, inclusive arquivo novo que ainda não passou por `git add`. Não lê `.git/`, `node_modules/`, `.wrangler/` nem `dist/`. Também não lê `.dev.vars`, que é o arquivo local de secrets e não é código. O relatório traz arquivo, linha e tipo do achado, sem o valor.
+
+`npm run verify:assets` lê só `dist/`. Um segredo no build falha esse comando mesmo que o source esteja limpo.
+
 ## Turnstile por ambiente
 
 Local e preview usam a sitekey pública de teste. No uso normal os dois usam a secret oficial always-pass. A secret always-fail entra só num deployment temporário de teste negativo e sai em seguida. Produção usará sitekey e secret reais, ainda não configuradas. Os valores reais não ficam neste arquivo. A secret não vai para o frontend.

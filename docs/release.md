@@ -39,7 +39,7 @@ npm run secret-scan
 npm run benchmark:password
 ```
 
-`verify:assets` falha se `dist/` contiver `.dev.vars` ou um valor de secret. O plugin apaga o `.dev.vars` emitido no build antes dessa verificação.
+`npm run secret-scan` percorre o source, com untracked. `npm run verify:assets` percorre só `dist/`. Os dois precisam passar. `verify:assets` falha se `dist/` contiver `.dev.vars` ou um valor de secret. O plugin apaga o `.dev.vars` emitido no build antes dessa verificação.
 
 ## Rollback
 

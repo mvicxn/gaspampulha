@@ -1,7 +1,20 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { PRODUCTION_PLACEHOLDER, getDeploymentEnvironment } from "./deployment-env.mjs";
+
+const target = getDeploymentEnvironment(process.argv[2]);
+const config = readFileSync("wrangler.jsonc", "utf8");
+const ids = [...config.matchAll(/"database_id":\s*"([^"]+)"/g)].map((match) => match[1]);
+if (target === "preview") {
+  console.error("admin de preview não usa o banco de produção");
+  process.exit(1);
+}
+if (target === "production" && (ids[0] === PRODUCTION_PLACEHOLDER || ids[0] === ids[1])) {
+  console.error("admin de produção recusado: database_id ainda é placeholder");
+  process.exit(1);
+}
 
 const username = process.env.ADMIN_USERNAME ?? "";
 const password = process.env.ADMIN_PASSWORD ?? "";
@@ -24,9 +37,10 @@ writeFileSync(
   file,
   `INSERT INTO admin_users (username, password_hash) VALUES ('${safeUser}', '${safeHash}');\n`,
 );
-const result = spawnSync("npx", ["wrangler", "d1", "execute", "gaspampulha", "--local", `--file=${file}`], {
-  stdio: "inherit",
-});
+const args = target === "local"
+  ? ["wrangler", "d1", "execute", "gaspampulha", "--local", `--file=${file}`]
+  : ["wrangler", "d1", "execute", "gaspampulha-production", "--remote", `--file=${file}`];
+const result = spawnSync("npx", args, { stdio: "inherit" });
 rmSync(directory, { recursive: true, force: true });
 if (result.status !== 0) process.exit(result.status ?? 1);
-console.log(`Admin local criado: ${username}`);
+console.log(`Admin ${target} criado: ${username}`);

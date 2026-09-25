@@ -8,16 +8,18 @@ Preview remoto ativo em `https://gaspampulha-rc-gaspampulha.magi-tools.workers.d
 
 # CURRENT PHASE
 
-Release Gate.
+Production Release Gate.
 
 # COMPLETED
 
-- Preview Validation.
-- Security Negative Path.
-- Preview isolation.
+- Production readiness plan.
+- Working tree secret scan.
+- Release guard review.
+- Admin bootstrap guard.
+- Migration review.
+- Preview Validation e isolation.
 - Turnstile positive and negative validation.
-- Git hygiene. `.cursor/` fora do Git.
-- Loja, pedido, painel, produtos, entrega e auditoria.
+- Release candidate `ffb592ed7bc5ed0c90259a40ccaefd2491f7244c`.
 
 # IN PROGRESS
 
@@ -25,7 +27,7 @@ Nada.
 
 # NEXT ACTION
 
-Criar o primeiro commit do release candidate e depois preparar o deploy de produção.
+Criar D1 de produção e configurar o ambiente de produção com confirmação humana.
 
 # ARCHITECTURE
 
@@ -71,7 +73,7 @@ Ver `docs/decisions.md` e `docs/release.md`. Amostragem de log 1 para não perde
 
 # LAST CHANGE
 
-Fase 8. Release gate local. A guarda de produção recusa placeholder, sitekey de teste e secret em `vars`. `docs/release.md` descreve local, preview, produção e rollback do preview.
+Fase 8.2. O secret scan lê a árvore de trabalho, inclusive untracked. A guarda de produção não aceita flag extra, sitekey de teste nem secret de teste. Sem recurso de produção.
 
 # HANDOFF
 
@@ -87,4 +89,8 @@ Testes: `npm test` 39/39. `npm run build` e `verify:assets` ok.
 
 Riscos: secret always-pass não rejeita token; sitekey de teste ainda está no config de produção e a guarda impede o deploy; limpeza de sessão continua manual.
 
-Pendências de produção: criar o D1 real, trocar o placeholder, sitekey e secrets reais, admin nesse banco, conferir cota de Workers Logs, DNS só depois. O JSON `ORDER_CREATE_TURNSTILE_REJECTED` ainda não foi lido no painel do preview. Sem push e sem deploy.
+Commit anterior: `ffb592ed7bc5ed0c90259a40ccaefd2491f7244c`. O commit desta fase é `chore: lock production release gates`. Preview: `https://gaspampulha-rc-gaspampulha.magi-tools.workers.dev`. D1 preview `6fb672ad-dae3-424c-b01f-b287b1ea2aa5`. Produção ainda é o id zero. Checklist em `docs/production.md`. Nenhum `d1 create`, Turnstile, secret, admin, DNS ou deploy de produção foi executado.
+
+Secrets de produção, ainda ausentes: `TURNSTILE_SECRET` e `AUDIT_HASH_SALT`, exclusivos, fora do Git. Turnstile de produção: widget, hostname, sitekey e secret reais. Migrations `0001`–`0006` não se editam. O gate está em `docs/production.md`.
+
+Pendências: criar o D1 `gaspampulha-production` só com confirmação humana, trocar o placeholder, secrets, admin e, depois, DNS. Sem deploy nesta fase.
