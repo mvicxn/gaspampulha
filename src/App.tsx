@@ -5,10 +5,12 @@ import AdminProducts from "./AdminProducts.tsx";
 import AdminSettings from "./AdminSettings.tsx";
 import Checkout from "./Checkout.tsx";
 import Confirmation from "./Confirmation.tsx";
+import Landing from "./Landing.tsx";
 import Store from "./Store.tsx";
 
 export default function App() {
   const path = window.location.pathname;
+  if (path === "/inicio") return <Landing />;
   if (path === "/checkout") return <Checkout />;
   if (path === "/admin/login") return <AdminLogin />;
   if (path === "/admin") return <Admin />;

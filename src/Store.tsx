@@ -68,13 +68,15 @@ function Category({
   title,
   products,
   onAdd,
+  id,
 }: {
   title: string;
   products: PublicProduct[];
   onAdd: (productId: number, quantity: number) => void;
+  id?: string;
 }) {
   return (
-    <section>
+    <section id={id}>
       <h2>{title}</h2>
       {products.length === 0 ? <p className="muted">Nenhum produto nesta categoria.</p> : null}
       <div className="grid">
@@ -140,8 +142,8 @@ export default function Store() {
         ) : null}
         {catalog ? (
           <>
-            <Category title="Água" products={catalog.categories.agua} onAdd={add} />
-            <Category title="Gás" products={catalog.categories.gas} onAdd={add} />
+            <Category id="agua" title="Água" products={catalog.categories.agua} onAdd={add} />
+            <Category id="gas" title="Gás" products={catalog.categories.gas} onAdd={add} />
           </>
         ) : null}
         <section className="cart" aria-label="Carrinho">
