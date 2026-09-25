@@ -117,6 +117,6 @@ test("admin de produção no placeholder aborta antes do wrangler", () => {
     env: { ...process.env, ADMIN_USERNAME: "operador", ADMIN_PASSWORD: "preview-operador-123" },
   });
   assert.equal(result.status, 1);
-  assert.match(result.stderr, /placeholder/);
+  assert.match(result.stderr, /ADMIN_CONFIRM/);
   assert.equal(result.stdout.includes("wrangler"), false);
 });

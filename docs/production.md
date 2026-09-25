@@ -1,18 +1,12 @@
 # Produção
 
-Nada disso foi executado. O `database_id` de produção continua `00000000-0000-0000-0000-000000000000`. O banco não existe. Não há DNS, widget, secret nem admin de produção.
+O D1 `gaspampulha-production` existe. O id é `793f344d-b581-4d59-a46a-4e8525903180`, no binding `DB`. Não é o placeholder e não é o preview `6fb672ad-dae3-424c-b01f-b287b1ea2aa5`. Não há DNS, widget, secret nem admin de produção. Não houve deploy.
 
 O ambiente só é `local`, `preview` ou `production` quando o alvo é explícito. Ausência de preview não significa produção. `scripts/deployment-env.mjs` recusa banco cruzado, sitekey de teste em produção e secret de teste em produção.
 
 ## A. D1
 
-Quando um humano confirmar:
-
-```bash
-npx wrangler d1 create gaspampulha-production
-```
-
-O comando imprime o `database_id`. Esse valor entra em `wrangler.jsonc` no binding `DB`, com `database_name` `gaspampulha-production`. Até lá o placeholder fica. O id não pode ser o de `gaspampulha-preview` (`6fb672ad-dae3-424c-b01f-b287b1ea2aa5`).
+O banco foi criado em ENAM. O binding de produção em `wrangler.jsonc` é `DB`, nome `gaspampulha-production`, id `793f344d-b581-4d59-a46a-4e8525903180`. O preview permanece no bloco `previews`.
 
 ## B. Migrations
 
@@ -24,7 +18,7 @@ npx wrangler d1 migrations apply PREVIEW_DB --remote --config wrangler.preview-m
 npx wrangler d1 migrations apply gaspampulha-production --remote
 ```
 
-O terceiro comando fica para depois do id real. `scripts/guard-remote.mjs production-migrate` não aplica migration e recusa `delete`, `drop` e `reset`. Não há flag que pule a guarda.
+As migrations `0001`–`0006` já foram aplicadas em `gaspampulha-production` (`793f344d-b581-4d59-a46a-4e8525903180`). `scripts/guard-remote.mjs production-migrate` não aplica migration e recusa `delete`, `drop` e `reset`. Não há flag que pule a guarda.
 
 `migrations/0003_public_actor.sql` recria `audit_events` para aceitar o ator `public`. Isso já rodou no preview, quando a tabela ainda não era histórico de produção. Não há `DROP` de `orders`. O seed não tem senha nem pedido.
 
@@ -78,7 +72,7 @@ Depois, no painel: custom domain do Worker e o mesmo hostname no widget do Turns
 
 ## Dados
 
-Produção começa sem pedidos. `seed/seed.sql` traz settings e produtos iniciais, sem admin e sem senha. Não copiar pedidos do preview.
+Produção está sem pedidos, sem admin e sem auditoria. A migration `0006` inseriu só `delivery_whatsapp_number` vazio. A próxima carga de dados, ainda não executada, é `seed/seed.sql`: settings e produtos iniciais, sem senha e sem pedido. Não copiar dados do preview. O `wrangler dev` local passa a usar o nome `gaspampulha-production` para o SQLite local; o arquivo local antigo `gaspampulha` não foi apagado.
 
 ## Logs
 

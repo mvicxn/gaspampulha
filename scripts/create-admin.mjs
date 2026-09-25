@@ -15,6 +15,10 @@ if (target === "production" && (ids[0] === PRODUCTION_PLACEHOLDER || ids[0] === 
   console.error("admin de produção recusado: database_id ainda é placeholder");
   process.exit(1);
 }
+if (target === "production" && process.env.ADMIN_CONFIRM !== ids[0]) {
+  console.error("admin de produção recusado: confirme o database_id em ADMIN_CONFIRM");
+  process.exit(1);
+}
 
 const username = process.env.ADMIN_USERNAME ?? "";
 const password = process.env.ADMIN_PASSWORD ?? "";

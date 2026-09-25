@@ -4,22 +4,22 @@ Gaspampulha. MVP single-tenant de pedidos para um comércio local de água e gá
 
 # CURRENT STATE
 
-Preview remoto ativo em `https://gaspampulha-rc-gaspampulha.magi-tools.workers.dev`. O binding D1 do preview aponta para `gaspampulha-preview` (`6fb672ad-dae3-424c-b01f-b287b1ea2aa5`). A conta tem só esse banco. Produção continua com id placeholder e não foi criada. Não houve deploy de produção.
+Preview remoto ativo em `https://gaspampulha-rc-gaspampulha.magi-tools.workers.dev`, D1 `gaspampulha-preview` (`6fb672ad-dae3-424c-b01f-b287b1ea2aa5`). Produção tem D1 `gaspampulha-production` (`793f344d-b581-4d59-a46a-4e8525903180`) e ainda não foi publicada.
 
 # CURRENT PHASE
 
-Production Release Gate.
+Production Infrastructure — D1 Ready.
 
 # COMPLETED
 
+- Production D1 created.
+- Production migrations applied.
+- Production binding configured.
+- Production/preview isolation verified.
 - Production readiness plan.
 - Working tree secret scan.
-- Release guard review.
-- Admin bootstrap guard.
-- Migration review.
 - Preview Validation e isolation.
 - Turnstile positive and negative validation.
-- Release candidate `ffb592ed7bc5ed0c90259a40ccaefd2491f7244c`.
 
 # IN PROGRESS
 
@@ -27,13 +27,13 @@ Nada.
 
 # NEXT ACTION
 
-Criar D1 de produção e configurar o ambiente de produção com confirmação humana.
+Configurar Turnstile real e secrets de produção, sem deploy.
 
 # ARCHITECTURE
 
 - Local: `wrangler dev` e D1 `gaspampulha`.
 - Preview: o mesmo Worker `gaspampulha`, bloco `previews`, banco `gaspampulha-preview`.
-- Produção: Worker `gaspampulha`, id ainda `00000000-0000-0000-0000-000000000000`.
+- Produção: Worker `gaspampulha`, D1 `gaspampulha-production`, id `793f344d-b581-4d59-a46a-4e8525903180`.
 - Segredos de preview foram enviados com `--secrets-file` temporário, apagado em seguida. `base-config secret put` falha enquanto o script de produção não existe.
 - `TURNSTILE_SITEKEY` é var pública. Local e preview usam a sitekey de teste. Produção não.
 
@@ -55,7 +55,7 @@ Ver `docs/decisions.md` e `docs/release.md`. Amostragem de log 1 para não perde
 
 # KNOWN RISKS
 
-- O id de produção ainda é placeholder. A guarda recusa deploy enquanto a sitekey for a de teste.
+- A guarda recusa deploy enquanto a sitekey e a secret forem as de teste.
 - A secret de teste do Turnstile aceita qualquer token. Um 403 de token inválido só aparece com a secret real.
 - 20.000 iterações passaram de 10 ms numa medição e couberam em outra. O código fica em 10.000.
 - Workers Logs em amostragem 1 pode bater o teto do plano gratuito.
@@ -73,11 +73,11 @@ Ver `docs/decisions.md` e `docs/release.md`. Amostragem de log 1 para não perde
 
 # LAST CHANGE
 
-Fase 8.2. O secret scan lê a árvore de trabalho, inclusive untracked. A guarda de produção não aceita flag extra, sitekey de teste nem secret de teste. Sem recurso de produção.
+Fase 8.3. D1 `gaspampulha-production` criado e com migrations `0001`–`0006`. Sem Turnstile, secret, admin, DNS ou deploy.
 
 # HANDOFF
 
-URL: `https://gaspampulha-rc-gaspampulha.magi-tools.workers.dev`. Banco: `gaspampulha-preview`, id `6fb672ad-dae3-424c-b01f-b287b1ea2aa5`. Produção: id `00000000-0000-0000-0000-000000000000`, banco inexistente.
+URL: `https://gaspampulha-rc-gaspampulha.magi-tools.workers.dev`. Banco de preview: `gaspampulha-preview`, id `6fb672ad-dae3-424c-b01f-b287b1ea2aa5`. Produção: `gaspampulha-production`, id `793f344d-b581-4d59-a46a-4e8525903180`.
 
 Turnstile: local e preview usam sitekey de teste e, no uso normal, secret always-pass. A secret always-fail só entra num deployment temporário de teste negativo. Produção ainda não tem sitekey nem secret reais.
 
@@ -89,8 +89,8 @@ Testes: `npm test` 39/39. `npm run build` e `verify:assets` ok.
 
 Riscos: secret always-pass não rejeita token; sitekey de teste ainda está no config de produção e a guarda impede o deploy; limpeza de sessão continua manual.
 
-Commit anterior: `ffb592ed7bc5ed0c90259a40ccaefd2491f7244c`. O commit desta fase é `chore: lock production release gates`. Preview: `https://gaspampulha-rc-gaspampulha.magi-tools.workers.dev`. D1 preview `6fb672ad-dae3-424c-b01f-b287b1ea2aa5`. Produção ainda é o id zero. Checklist em `docs/production.md`. Nenhum `d1 create`, Turnstile, secret, admin, DNS ou deploy de produção foi executado.
+Commits: `ffb592ed7bc5ed0c90259a40ccaefd2491f7244c`, `4b75e48beba318f3193cb8cf49338ae184d965bb`, e o desta fase `chore: bind production database`. Preview: `https://gaspampulha-rc-gaspampulha.magi-tools.workers.dev`, D1 `gaspampulha-preview` `6fb672ad-dae3-424c-b01f-b287b1ea2aa5`. Produção: `gaspampulha-production` `793f344d-b581-4d59-a46a-4e8525903180`. Migrations `0001`–`0006` aplicadas. Pedidos, auditoria e admin estão em zero. A próxima carga é o seed, ainda não executada. Sem Turnstile, secret, admin, DNS ou deploy.
 
 Secrets de produção, ainda ausentes: `TURNSTILE_SECRET` e `AUDIT_HASH_SALT`, exclusivos, fora do Git. Turnstile de produção: widget, hostname, sitekey e secret reais. Migrations `0001`–`0006` não se editam. O gate está em `docs/production.md`.
 
-Pendências: criar o D1 `gaspampulha-production` só com confirmação humana, trocar o placeholder, secrets, admin e, depois, DNS. Sem deploy nesta fase.
+Pendências: Turnstile real, secrets de produção, seed, admin com `ADMIN_CONFIRM` igual ao id, e DNS só depois. Sem deploy nesta fase.

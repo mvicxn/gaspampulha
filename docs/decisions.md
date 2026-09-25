@@ -24,6 +24,14 @@ E — `create-admin.mjs production` para no placeholder. O segundo commit trava 
 
 V — O teste do admin sai 1 sem chamar o Wrangler. `git status` fica limpo depois do commit.
 
+## D1 de produção
+
+J — A loja precisa de um banco real antes de qualquer deploy.
+
+E — `gaspampulha-production`, id `793f344d-b581-4d59-a46a-4e8525903180`, região ENAM. Migrations `0001`–`0006` aplicadas nesse id. O preview continua `6fb672ad-dae3-424c-b01f-b287b1ea2aa5`.
+
+V — `orders`, `audit_events` e `admin_users` estão em zero. A única linha de `settings` é `delivery_whatsapp_number` vazio, vinda da migration `0006`. Não houve deploy.
+
 ## Isolamento da produção
 
 J — O preview já tem dados. A loja real não pode nascer nesse banco.

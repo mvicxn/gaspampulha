@@ -23,8 +23,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "gaspampulha",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_name": "gaspampulha-production",
+      "database_id": "793f344d-b581-4d59-a46a-4e8525903180",
       "migrations_dir": "migrations"
     }
   ],
