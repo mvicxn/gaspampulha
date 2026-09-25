@@ -1,6 +1,21 @@
 # Release candidate
 
-Um Worker, `gaspampulha`. Três usos do banco: local, preview e produção. O binding de desenvolvimento não leva `preview_database_id`: isso fez o `wrangler dev` abrir um SQLite vazio e o catálogo responder 500.
+Um Worker, `gaspampulha`. Local roda os testes. Preview usa `npx wrangler preview` e o D1 `gaspampulha-preview`. Produção usa o D1 `gaspampulha-production`, o Turnstile real, secrets num arquivo fora do Git e `wrangler deploy --secrets-file`, só depois de `npm run predeploy`. Version URL não faz parte desse fluxo. `preview_urls` fica `false`. `workers_dev` fica `true` para o hostname `gaspampulha.magi-tools.workers.dev`. Domínio próprio pode entrar depois. Não há DNS nesta fase.
+
+O caminho até publicar:
+
+1. Git limpo.
+2. Preview validado.
+3. D1 de produção existente.
+4. Turnstile de produção existente.
+5. Secrets de produção preparados.
+6. `npm run predeploy`.
+7. Admin com `ADMIN_CONFIRM` igual ao id do banco.
+8. Deploy.
+9. Smoke test.
+10. Logs.
+
+O binding de desenvolvimento não leva `preview_database_id`: isso fez o `wrangler dev` abrir um SQLite vazio e o catálogo responder 500.
 
 ## Local
 
@@ -10,7 +25,7 @@ Um Worker, `gaspampulha`. Três usos do banco: local, preview e produção. O bi
 npx wrangler d1 migrations apply gaspampulha --local
 ```
 
-`.dev.vars` traz `TURNSTILE_SECRET` e `AUDIT_HASH_SALT`. Esse arquivo não entra no Git. A sitekey pública de teste está em `vars.TURNSTILE_SITEKEY`. O frontend lê `turnstileSiteKey` em `GET /api/health`.
+`.dev.vars` traz `TURNSTILE_SECRET` e `AUDIT_HASH_SALT`. Esse arquivo não entra no Git. A sitekey pública de teste fica no `.dev.vars` local e no bloco `previews`. A de produção fica em `vars.TURNSTILE_SITEKEY`. O frontend lê `turnstileSiteKey` em `GET /api/health`.
 
 ## Preview
 

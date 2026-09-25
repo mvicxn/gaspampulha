@@ -111,6 +111,41 @@ test("alvo desconhecido é ambíguo", () => {
   assert.match(result.stderr, /ambiente ambíguo/);
 });
 
+test("estado remoto desconhecido aborta Version URL", () => {
+  const failed = spawnSync(
+    "node",
+    ["--input-type=module", "--eval", `import { assertRemoteVersionUrlsOff } from "./scripts/deployment-env.mjs";
+      try { assertRemoteVersionUrlsOff(undefined); process.exit(0); } catch { process.exit(1); }`],
+    { encoding: "utf8" },
+  );
+  const passed = spawnSync(
+    "node",
+    ["--input-type=module", "--eval", `import { assertRemoteVersionUrlsOff } from "./scripts/deployment-env.mjs";
+      assertRemoteVersionUrlsOff({ previews_enabled: false });`],
+    { encoding: "utf8" },
+  );
+  assert.equal(failed.status, 1);
+  assert.equal(passed.status, 0);
+});
+
+test("preview_urls true aborta e false passa", () => {
+  const failed = spawnSync(
+    "node",
+    ["--input-type=module", "--eval", `import { assertPreviewUrlsOff } from "./scripts/deployment-env.mjs";
+      try { assertPreviewUrlsOff('{"preview_urls": true}'); process.exit(0); }
+      catch { process.exit(1); }`],
+    { encoding: "utf8" },
+  );
+  const passed = spawnSync(
+    "node",
+    ["--input-type=module", "--eval", `import { assertPreviewUrlsOff } from "./scripts/deployment-env.mjs";
+      assertPreviewUrlsOff('{"preview_urls": false}');`],
+    { encoding: "utf8" },
+  );
+  assert.equal(failed.status, 1);
+  assert.equal(passed.status, 0);
+});
+
 test("admin de produção no placeholder aborta antes do wrangler", () => {
   const result = spawnSync("node", ["scripts/create-admin.mjs", "production"], {
     encoding: "utf8",

@@ -9,6 +9,7 @@
     "verify:assets": "node scripts/assert-no-secrets-in-assets.mjs",
     "test": "tsc -p tsconfig.tests.json && node --test dist-tests/tests/*.test.js",
     "preview:local": "vite preview",
+    "predeploy": "node scripts/predeploy.mjs --check",
     "deploy": "node scripts/guard-remote.mjs production",
     "preview": "node scripts/guard-remote.mjs preview",
     "secret-scan": "node scripts/secret-scan.mjs",

@@ -8,9 +8,13 @@ Este documento não afirma que o sistema é inviolável. Descreve o que o códig
 
 `npm run verify:assets` lê só `dist/`. Um segredo no build falha esse comando mesmo que o source esteja limpo.
 
+Version URLs usam os recursos de produção e são públicas quando habilitadas. `preview_urls=false` no arquivo não prova o remoto. `workers.dev=false` também não desligou a versão já criada `84a71b67-99ec-4d0b-9a26-3b110e237838`. O DELETE dessa versão foi recusado porque ela é a última. O teste usa Previews com recursos isolados.
+
 ## Turnstile por ambiente
 
-Local e preview usam a sitekey pública de teste. No uso normal os dois usam a secret oficial always-pass. A secret always-fail entra só num deployment temporário de teste negativo e sai em seguida. Produção usará sitekey e secret reais, ainda não configuradas. Os valores reais não ficam neste arquivo. A secret não vai para o frontend.
+O frontend recebe só `TURNSTILE_SITEKEY`. O Worker manda o token e `TURNSTILE_SECRET` para `https://challenges.cloudflare.com/turnstile/v0/siteverify`. Se a resposta não for de chave de teste, o hostname devolvido tem de ser o hostname do request. As ações já usadas são `order` e `admin-login`. A CSP permite `https://challenges.cloudflare.com` em `script-src`, `frame-src`, `style-src` e `connect-src`, sem `*`.
+
+Produção usa a sitekey real e o widget restrito a `gaspampulha.magi-tools.workers.dev`. Preview e local usam a sitekey de teste. Os salts não se repetem. Os valores não ficam neste arquivo.
 
 ## Baseline já ligado
 

@@ -24,6 +24,86 @@ E — `create-admin.mjs production` para no placeholder. O segundo commit trava 
 
 V — O teste do admin sai 1 sem chamar o Wrangler. `git status` fica limpo depois do commit.
 
+## Release sem Version URL
+
+J — Evitar repetir o mecanismo que expôs o D1 de produção por uma URL de versão.
+
+E — A Version URL executou com o banco `793f344d-b581-4d59-a46a-4e8525903180`. O fluxo passou a ser Preview para teste e `wrangler deploy --secrets-file` para produção. `preview_urls` permanece `false`. `workers_dev` fica `true` só no config, sem deploy nesta fase.
+
+V — `npm run predeploy` não publica. A versão exposta não está mais na lista.
+
+## Delete depois da segunda versão
+
+J — A primeira recusa aconteceu porque a versão exposta era a última. Com outra versão existente, repetir o DELETE é a menor alteração.
+
+E — O DELETE de `84a71b67-99ec-4d0b-9a26-3b110e237838` retornou sucesso. A lista ficou só com `a7bd294f-a4b1-4ae7-a72e-88ebb8dc4b67`. A secret do widget foi rotacionada com invalidação imediata, sem gravar o valor no Git.
+
+V — A consulta dessa versão responde que ela não existe. `orders`, `audit_events` e `admin_users` continuam em zero.
+
+## Quarentena herdou secrets
+
+J — A versão exposta é a única e o DELETE devolve 10339. Uma sucessora inerte deveria permitir apagá-la.
+
+E — A versão `a7bd294f-a4b1-4ae7-a72e-88ebb8dc4b67` só responde 503 e não tem D1. O metadata ainda lista `TURNSTILE_SECRET` e `AUDIT_HASH_SALT` como `secret_text`.
+
+V — A versão `84a71b67-99ec-4d0b-9a26-3b110e237838` não foi apagada. Não houve terceira versão nem rotação.
+
+## Apagar a versão que executa
+
+J — Remover o artefato que executa é mais direto do que repetir controles que já não contiveram esta URL.
+
+E — O metadata confirma o id `84a71b67-99ec-4d0b-9a26-3b110e237838`. O DELETE oficial voltou código 10339: a última versão não pode ser apagada.
+
+V — A lista de versões ainda contém esse id. Não houve outra versão criada para contornar a recusa.
+
+## Cache não esconde a versão
+
+J — Um HIT na URL antiga não distingue cache de execução.
+
+E — A raiz com query nova continuou HIT. `GET /api/health` com outra query nova voltou JSON 200 e `no-store`.
+
+V — A versão `84a71b67-99ec-4d0b-9a26-3b110e237838` não foi apagada. Não houve POST.
+
+## Versão sem tráfego
+
+J — Preparar a produção real sem entregar a URL de versão como ambiente de teste.
+
+E — `wrangler versions upload` com `--secrets-file` fora do repositório. `preview_urls` está `false` no config. A versão é `84a71b67-99ec-4d0b-9a26-3b110e237838`. `deployments status` diz que não há deployment. O metadata da versão tem `has_preview: true`, e a URL impressa pelo Wrangler respondeu HTTP 200.
+
+V — O D1 `793f344d-b581-4d59-a46a-4e8525903180` segue com `orders`, `audit_events` e `admin_users` em zero. Não houve `versions deploy`. O arquivo temporário foi apagado.
+
+## Widget só no hostname de produção
+
+J — Evitar que o widget de produção aceite token emitido em outro domínio.
+
+E — Widget `Gaspampulha Production`, modo managed, domínio único `gaspampulha.magi-tools.workers.dev`. O Worker compara o hostname do siteverify com o do request, exceto na chave de teste.
+
+V — `wrangler turnstile widget get` mostra esse domínio e não mostra o preview. A sitekey real está só em `vars`. O bloco `previews` segue com a sitekey de teste. A secret real não foi para o Worker, porque isso publicaria.
+
+## Version URL desligada
+
+J — Evitar expor o D1 de produção antes do deploy. A documentação do Wrangler descreve a Version URL como link público por versão, no formato `<version>-<name>.<subdomain>.workers.dev`.
+
+E — `wrangler.jsonc` tem `preview_urls: false`. A guarda de produção aborta se o valor não for `false`. O Preview e o D1 `6fb672ad-dae3-424c-b01f-b287b1ea2aa5` não entram nessa chave.
+
+V — O teste `preview_urls true aborta e false passa`. Não houve upload nem deploy.
+
+## URL de versão não é produção
+
+J — Uma versão sem tráfego ainda pode abrir o D1 de produção se a URL da versão for pública.
+
+E — O subdomínio da conta é `magi-tools`, lido na API de workers subdomain. `versions list` está vazio. O Wrangler herda `preview_urls` da conta, e o preview desta conta já responde em URL pública. O binding de produção é `793f344d-b581-4d59-a46a-4e8525903180`.
+
+V — Não houve `versions upload`, widget, secret de produção nem `versions deploy`. O D1 de produção não foi consultado para escrita.
+
+## Secret de produção sem publicar
+
+J — A secret do Turnstile real não pode ir para o Git, e `wrangler secret put` publica o Worker.
+
+E — `wrangler deployments status` diz que `gaspampulha` não tem deployments. `wrangler versions list` voltou `[]`. O código de `versions secret put` cria uma versão nova e manda usar `wrangler versions deploy` para o tráfego. O dry-run não revelou o hostname de produção.
+
+V — Nenhum widget de produção foi criado. A sitekey do config continua a de teste. Preview e D1 de produção não foram alterados.
+
 ## D1 de produção
 
 J — A loja precisa de um banco real antes de qualquer deploy.

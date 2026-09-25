@@ -1,7 +1,28 @@
 import { existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { spawnSync } from "node:child_process";
-import { PRODUCTION_PLACEHOLDER, TEST_SITEKEY, TEST_TURNSTILE_SECRETS, assertDeployment } from "./deployment-env.mjs";
+import { PRODUCTION_PLACEHOLDER, TEST_SITEKEY, TEST_TURNSTILE_SECRETS, assertDeployment, assertPreviewUrlsOff, assertRemoteVersionUrlsOff } from "./deployment-env.mjs";
 import { scanTree } from "./secret-scan.mjs";
+
+function readRemotePreviewState() {
+  const toml = readFileSync(`${homedir()}/.config/.wrangler/config/default.toml`, "utf8");
+  const token = toml.split("oauth_token = ")[1]?.split("\n")[0]?.trim().replaceAll('"', "");
+  if (!token) return undefined;
+  const result = spawnSync("curl", [
+    "-sS",
+    "--max-time",
+    "20",
+    "-H",
+    `Authorization: Bearer ${token}`,
+    "https://api.cloudflare.com/client/v4/accounts/8690b830da0b2d1acd9184f2b88ca6cd/workers/scripts/gaspampulha/subdomain",
+  ], { encoding: "utf8" });
+  if (result.status !== 0) return undefined;
+  try {
+    return JSON.parse(result.stdout).result;
+  } catch {
+    return undefined;
+  }
+}
 
 const requiredSecrets = ["TURNSTILE_SECRET", "AUDIT_HASH_SALT"];
 if (!existsSync(".dev.vars")) {
@@ -61,21 +82,43 @@ if (target === "preview") {
   }
 }
 if (target.startsWith("production")) {
+  try {
+    assertPreviewUrlsOff(config);
+    assertRemoteVersionUrlsOff(readRemotePreviewState());
+  } catch {
+    console.error("Version URLs locais ou remotas não estão desligadas. Não houve deploy.");
+    process.exit(1);
+  }
   if (productionId === PRODUCTION_PLACEHOLDER || names[0] !== "gaspampulha-production") {
     console.error("database_id de produção ainda é placeholder. Não houve deploy.");
     process.exit(1);
   }
-  if (productionSiteKey === TEST_SITEKEY) {
+  if (!/"workers_dev"\s*:\s*true/.test(config)) {
+    console.error("produção do MVP precisa de workers_dev true. Não houve deploy.");
+    process.exit(1);
+  }
+  if (!productionSiteKey || productionSiteKey === TEST_SITEKEY) {
     console.error("produção ainda usa a sitekey de teste do Turnstile. Não houve deploy.");
     process.exit(1);
   }
-  const secretPrefix = ["TURNSTILE", "SECRET"].join("_") + "=";
-  const assigned = readFileSync(".dev.vars", "utf8")
-    .split("\n")
-    .find((line) => line.startsWith(secretPrefix));
-  const secretValue = assigned?.slice(secretPrefix.length).trim() ?? "";
-  if (!secretValue || TEST_TURNSTILE_SECRETS.includes(secretValue)) {
-    console.error("secret de produção ausente ou ainda é a de teste. Não houve deploy.");
+  if (process.env.GASP_CONFIRM_DEPLOY !== productionId) {
+    console.error("deploy de produção exige GASP_CONFIRM_DEPLOY igual ao database_id. Não houve deploy.");
+    process.exit(1);
+  }
+  const secretsFile = process.env.GASP_SECRETS_FILE ?? "";
+  if (!secretsFile || secretsFile.startsWith("/home/mm-lab-corp/gaspampulha")) {
+    console.error("secret de produção ausente. Não houve deploy.");
+    process.exit(1);
+  }
+  const secretText = readFileSync(secretsFile, "utf8");
+  const secretMap = Object.fromEntries(secretText.split("\n").filter((line) => line.includes("=")).map((line) => {
+    const index = line.indexOf("=");
+    return [line.slice(0, index), line.slice(index + 1)];
+  }));
+  const saltPrefix = "AUDIT_HASH_" + "SALT=";
+  const localSalt = readFileSync(".dev.vars", "utf8").split("\n").find((line) => line.startsWith(saltPrefix))?.slice(saltPrefix.length) ?? "";
+  if (!secretMap.TURNSTILE_SECRET || !secretMap.AUDIT_HASH_SALT || TEST_TURNSTILE_SECRETS.includes(secretMap.TURNSTILE_SECRET) || secretMap.AUDIT_HASH_SALT === localSalt) {
+    console.error("secret de produção ausente, de teste, ou igual ao salt local. Não houve deploy.");
     process.exit(1);
   }
   if (!existsSync("dist") || scanTree("dist").length > 0) {
@@ -95,6 +138,8 @@ if (target !== "preview" && target !== "production") {
   console.error("migration e admin de produção não rodam por este script");
   process.exit(1);
 }
-const args = target === "preview" ? ["wrangler", "preview"] : ["wrangler", "deploy"];
+const args = target === "preview"
+  ? ["wrangler", "preview"]
+  : ["wrangler", "deploy", "--secrets-file", process.env.GASP_SECRETS_FILE];
 const result = spawnSync("npx", args, { stdio: "inherit" });
 process.exit(result.status ?? 1);

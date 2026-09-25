@@ -26,7 +26,15 @@ Local usa o SQLite do Wrangler. Preview usa só `gaspampulha-preview`. Produçã
 
 ## C. Turnstile
 
-Widget separado, hostname restrito ao domínio real. Sitekey e secret reais. Não usar as chaves oficiais de teste, nem a que sempre passa nem a que sempre falha.
+A API `GET /accounts/…/workers/subdomain` devolveu só `subdomain: magi-tools`. O Worker `gaspampulha` continua sem versão e sem deployment, então a rota `workers.dev` desse script não está registrada. A fórmula `<nome>.magi-tools.workers.dev` não foi tratada como hostname confirmado.
+
+O hostname previsto do workers.dev é `gaspampulha.magi-tools.workers.dev`. A rota só existe depois da publicação. O widget `Gaspampulha Production` está em modo managed e só nesse hostname. A sitekey pública de produção está em `vars.TURNSTILE_SITEKEY`. O preview e o `.dev.vars` local continuam com a sitekey de teste.
+
+`preview_urls=false` no arquivo não prova o remoto, e `previews_enabled: false` também não conteve uma versão já criada. O `workers.dev` do script está desligado e a versão `84a71b67-99ec-4d0b-9a26-3b110e237838` ainda respondeu `/api/health`. Não religar o subdomínio nesta etapa.
+
+A versão `84a71b67-99ec-4d0b-9a26-3b110e237838` foi enviada com o remoto ainda em `previews_enabled: true`. A contenção ligou esse campo para `false`. A URL da versão continuou em HTTP 200 por cache da borda. A versão ainda existe. Não houve deploy de tráfego.
+
+`wrangler secret put` publica na hora. `wrangler versions secret put` não manda tráfego, mas exige uma versão já enviada e avisa para usar `wrangler versions deploy` depois. Sem versão, o secret real não tem onde ficar sem criar o Worker. O widget de produção não foi criado, para a secret não nascer só num log.
 
 ## D. Sitekey
 

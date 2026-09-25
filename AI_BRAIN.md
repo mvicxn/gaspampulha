@@ -8,18 +8,16 @@ Preview remoto ativo em `https://gaspampulha-rc-gaspampulha.magi-tools.workers.d
 
 # CURRENT PHASE
 
-Production Infrastructure — D1 Ready.
+Production Release Path Hardened.
 
 # COMPLETED
 
-- Production D1 created.
-- Production migrations applied.
-- Production binding configured.
-- Production/preview isolation verified.
-- Production readiness plan.
-- Working tree secret scan.
-- Preview Validation e isolation.
-- Turnstile positive and negative validation.
+- Incident contained.
+- Exposed version removed.
+- Turnstile secret rotated.
+- Release architecture redesigned.
+- Direct deploy strategy.
+- Production predeploy gate.
 
 # IN PROGRESS
 
@@ -27,7 +25,7 @@ Nada.
 
 # NEXT ACTION
 
-Configurar Turnstile real e secrets de produção, sem deploy.
+Executar o pre-deploy gate e criar o primeiro admin de produção.
 
 # ARCHITECTURE
 
@@ -73,13 +71,13 @@ Ver `docs/decisions.md` e `docs/release.md`. Amostragem de log 1 para não perde
 
 # LAST CHANGE
 
-Fase 8.3. D1 `gaspampulha-production` criado e com migrations `0001`–`0006`. Sem Turnstile, secret, admin, DNS ou deploy.
+Incidente fechado no registro. Release deixa Version URL de fora. `workers_dev` true e `preview_urls` false no config. Sem deploy.
 
 # HANDOFF
 
 URL: `https://gaspampulha-rc-gaspampulha.magi-tools.workers.dev`. Banco de preview: `gaspampulha-preview`, id `6fb672ad-dae3-424c-b01f-b287b1ea2aa5`. Produção: `gaspampulha-production`, id `793f344d-b581-4d59-a46a-4e8525903180`.
 
-Turnstile: local e preview usam sitekey de teste e, no uso normal, secret always-pass. A secret always-fail só entra num deployment temporário de teste negativo. Produção ainda não tem sitekey nem secret reais.
+Hostname previsto: `gaspampulha.magi-tools.workers.dev`. `workers_dev` true e `preview_urls` false no config. O remoto ainda está com o subdomínio desligado até o deploy. Secrets de produção vão no `--secrets-file`, fora do Git. O salt antigo da versão exposta não será reusado. Incidente CLOSED. Deploy ainda pendente.
 
 Observabilidade: painel do preview `gaspampulha-rc`. Não usar `wrangler tail`. A API de telemetry desta conta respondeu 10000, então o JSON do log não foi lido por aqui.
 
@@ -93,4 +91,4 @@ Commits: `ffb592ed7bc5ed0c90259a40ccaefd2491f7244c`, `4b75e48beba318f3193cb8cf49
 
 Secrets de produção, ainda ausentes: `TURNSTILE_SECRET` e `AUDIT_HASH_SALT`, exclusivos, fora do Git. Turnstile de produção: widget, hostname, sitekey e secret reais. Migrations `0001`–`0006` não se editam. O gate está em `docs/production.md`.
 
-Pendências: Turnstile real, secrets de produção, seed, admin com `ADMIN_CONFIRM` igual ao id, e DNS só depois. Sem deploy nesta fase.
+Version URLs desligadas. Preview segue em `https://gaspampulha-rc-gaspampulha.magi-tools.workers.dev` com o D1 `6fb672ad-dae3-424c-b01f-b287b1ea2aa5`. Produção `793f344d-b581-4d59-a46a-4e8525903180` ainda sem deployment, sem Turnstile e sem secrets. Hostname de produção do script ainda não registrado. Sem commit.

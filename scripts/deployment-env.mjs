@@ -7,6 +7,15 @@ export const PRODUCTION_PLACEHOLDER = "00000000-0000-0000-0000-000000000000";
 
 const TARGETS = new Set(["local", "preview", "production"]);
 
+export function assertRemoteVersionUrlsOff(state) {
+  if (!state || state.previews_enabled !== false) throw new Error("remote-version-urls");
+}
+
+export function assertPreviewUrlsOff(config) {
+  const match = config.match(/"preview_urls"\s*:\s*(true|false)/);
+  if (!match || match[1] !== "false") throw new Error("preview-urls-enabled");
+}
+
 export function getDeploymentEnvironment(target) {
   if (!TARGETS.has(target)) throw new Error("ambiente ambíguo");
   return target;
