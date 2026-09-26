@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import SiteHeader from "./SiteHeader.tsx";
 import type { CatalogResponse, OrderConfirmation, PaymentMethod } from "../shared/types.ts";
-import { calculateDisplayTotal, formatBrl, parseStoredCart, reconcileCart, type CartItem } from "./cart.ts";
+import { CART_KEY, calculateDisplayTotal, formatBrl, parseStoredCart, reconcileCart, type CartItem } from "./cart.ts";
 
-const CART_KEY = "gaspampulha.cart";
 const IDEMPOTENCY_KEY = "gaspampulha.idempotency";
 
 function readCart(): CartItem[] {
@@ -132,12 +132,19 @@ export default function Checkout() {
   }
 
   return (
-    <main>
+    <>
+    <SiteHeader name={catalog?.store.name} />
+    <main className="page">
       <p className="mark">Pedido</p>
       <h1>Seus dados</h1>
       {failed ? <p className="error-text">{failed}</p> : null}
       <section className="cart">
         <h2>Resumo</h2>
+        {catalog && cart.length === 0 ? (
+          <p className="muted">
+            Seu carrinho está vazio. <a href="/#gas">Escolher produtos</a>
+          </p>
+        ) : null}
         {cart.map((item) => {
           const product = products.find((entry) => entry.id === item.productId);
           if (!product) return null;
@@ -148,6 +155,11 @@ export default function Checkout() {
           );
         })}
         <p className="total">Total {formatBrl(total)}</p>
+        {cart.length > 0 ? (
+          <a className="edit" href="/loja#carrinho">
+            Alterar itens
+          </a>
+        ) : null}
       </section>
       <form
         className="form"
@@ -228,5 +240,6 @@ export default function Checkout() {
         </button>
       </form>
     </main>
+    </>
   );
 }

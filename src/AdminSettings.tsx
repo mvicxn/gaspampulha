@@ -6,7 +6,16 @@ interface SettingsForm {
   whatsappNumber: string;
   pixKey: string;
   deliveryWhatsappNumber: string;
-  versions: { store_name: number; whatsapp_number: number; pix_key: number; delivery_whatsapp_number: number };
+  serviceArea: string;
+  openingHours: string;
+  versions: {
+    store_name: number;
+    whatsapp_number: number;
+    pix_key: number;
+    delivery_whatsapp_number: number;
+    service_area: number;
+    opening_hours: number;
+  };
 }
 
 export default function AdminSettings() {
@@ -57,6 +66,8 @@ export default function AdminSettings() {
               whatsapp_number: form.whatsappNumber,
               pix_key: form.pixKey,
               delivery_whatsapp_number: form.deliveryWhatsappNumber,
+              service_area: form.serviceArea,
+              opening_hours: form.openingHours,
               versions: form.versions,
             }),
           }).then(async (response) => {
@@ -97,6 +108,24 @@ export default function AdminSettings() {
           <input
             value={form.deliveryWhatsappNumber}
             onChange={(event) => setForm({ ...form, deliveryWhatsappNumber: event.target.value })}
+          />
+        </label>
+        <label>
+          Área de atendimento (aparece no site)
+          <input
+            value={form.serviceArea}
+            maxLength={160}
+            placeholder="Ex.: bairros ou cidades atendidas"
+            onChange={(event) => setForm({ ...form, serviceArea: event.target.value })}
+          />
+        </label>
+        <label>
+          Horário de atendimento (aparece no site)
+          <input
+            value={form.openingHours}
+            maxLength={160}
+            placeholder="Ex.: dias e horários de entrega"
+            onChange={(event) => setForm({ ...form, openingHours: event.target.value })}
           />
         </label>
         <button className="continue" type="submit">

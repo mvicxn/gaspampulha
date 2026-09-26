@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import SiteHeader from "./SiteHeader.tsx";
 import type { CatalogResponse, PublicProduct } from "../shared/types.ts";
 import {
   addItem,
   calculateDisplayTotal,
+  CART_KEY,
   CART_MAX,
   CART_MIN,
   decreaseItem,
@@ -14,7 +16,6 @@ import {
   type CartItem,
 } from "./cart.ts";
 
-const CART_KEY = "gaspampulha.cart";
 
 function readCart(): CartItem[] {
   try {
@@ -52,13 +53,26 @@ function ProductCard({
   onAdd: (productId: number, quantity: number) => void;
 }) {
   const [quantity, setQuantity] = useState(1);
+  const [added, setAdded] = useState(false);
+  useEffect(() => {
+    if (!added) return;
+    const timer = window.setTimeout(() => setAdded(false), 1600);
+    return () => window.clearTimeout(timer);
+  }, [added]);
   return (
     <article className="card">
       <h3>{product.name}</h3>
       <p className="price">{formatBrl(product.price_cents)}</p>
       <QtyControl value={quantity} onChange={setQuantity} />
-      <button type="button" className="add" onClick={() => onAdd(product.id, quantity)}>
-        Adicionar
+      <button
+        type="button"
+        className="add"
+        onClick={() => {
+          onAdd(product.id, quantity);
+          setAdded(true);
+        }}
+      >
+        {added ? "Adicionado ao carrinho" : "Adicionar"}
       </button>
     </article>
   );
@@ -127,11 +141,10 @@ export default function Store() {
 
   return (
     <>
-      <header className="top">
-        <p className="mark">Água e gás</p>
-        <h1>{catalog?.store.name || "Loja"}</h1>
-      </header>
-      <main>
+      <SiteHeader name={catalog?.store.name} />
+      <main className="page">
+        <p className="mark">Loja</p>
+        <h1>Gás e água</h1>
         {failed ? (
           <section className="error">
             <p>Não foi possível carregar os produtos.</p>
@@ -142,11 +155,11 @@ export default function Store() {
         ) : null}
         {catalog ? (
           <>
-            <Category id="agua" title="Água" products={catalog.categories.agua} onAdd={add} />
             <Category id="gas" title="Gás" products={catalog.categories.gas} onAdd={add} />
+            <Category id="agua" title="Água" products={catalog.categories.agua} onAdd={add} />
           </>
         ) : null}
-        <section className="cart" aria-label="Carrinho">
+        <section className="cart" id="carrinho" aria-label="Carrinho">
           <h2>Carrinho</h2>
           {cart.length === 0 ? <p className="muted">Nenhum item ainda.</p> : null}
           <ul>
@@ -190,6 +203,14 @@ export default function Store() {
           </button>
         </section>
       </main>
+      {cart.length > 0 ? (
+        <div className="cart-bar">
+          <span>Total {formatBrl(total)}</span>
+          <button type="button" className="continue" onClick={() => window.location.assign("/checkout")}>
+            Continuar
+          </button>
+        </div>
+      ) : null}
     </>
   );
 }

@@ -10,7 +10,7 @@ import Store from "./Store.tsx";
 
 export default function App() {
   const path = window.location.pathname;
-  if (path === "/inicio") return <Landing />;
+  if (path === "/loja") return <Store />;
   if (path === "/checkout") return <Checkout />;
   if (path === "/admin/login") return <AdminLogin />;
   if (path === "/admin") return <Admin />;
@@ -20,5 +20,5 @@ export default function App() {
   if (path.startsWith("/pedido/")) {
     return <Confirmation code={decodeURIComponent(path.slice("/pedido/".length))} />;
   }
-  return <Store />;
+  return <Landing />;
 }

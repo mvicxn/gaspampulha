@@ -73,6 +73,8 @@ export interface CatalogResponse {
   store: {
     name: string;
     whatsapp: string;
+    serviceArea: string;
+    openingHours: string;
   };
   categories: {
     agua: PublicProduct[];

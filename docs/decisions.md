@@ -1,5 +1,37 @@
 # Decisões
 
+## Landing na raiz, loja em `/loja`
+
+J — O visitante chega pela raiz. A landing precisa ser a porta de entrada e levar ao pedido sem passar pela loja.
+
+E — `src/App.tsx` serve a landing em `/` e em qualquer rota desconhecida, e a loja em `/loja`. Cada produto da landing tem quantidade e "Pedir", que grava no mesmo carrinho e abre `/checkout`. `/inicio` continua funcionando.
+
+V — Pedido local pela landing: 2 × Botijão 13 kg, R$ 240,00, chegou a `/pedido/<código>`.
+
+## Área e horário como configuração
+
+J — Área de atendimento e horário são fatos da empresa e não estão registrados em lugar nenhum. O site não pode inventar.
+
+E — A migration `0007` cria `service_area` e `opening_hours` vazios. O admin edita os dois em Configurações, no mesmo PUT versionado das outras chaves, que exige os seis campos. `GET /api/catalog` publica os dois. Vazio, a landing mostra um texto genérico e omite o horário.
+
+V — Gravação local 200, CSRF reutilizado 403, seis chaves na versão 2 e um `SETTINGS_UPDATED` no audit.
+
+## WhatsApp de exemplo não vai para o cliente
+
+J — O `whatsapp_number` de produção ainda é o valor de exemplo do seed. Um botão de contato mandaria o cliente para um número que não é da loja.
+
+E — `toPublicCatalog` devolve `whatsapp` vazio quando o valor é `5531999990000`. A landing esconde o contato até alguém gravar o número real no admin.
+
+V — `tests/catalog.test.ts` cobre o caso.
+
+## Deploy mantendo os secrets do Worker
+
+J — O arquivo de secrets de produção ficava em `/tmp` e sumiu no reboot. Gerar outro salt mudaria os hashes do audit.
+
+E — `GASP_KEEP_REMOTE_SECRETS=1` faz o predeploy e o guard conferirem os nomes com `wrangler secret list` e publicarem sem `--secrets-file`. Os valores não saem do Cloudflare.
+
+V — `wrangler secret list` lista `AUDIT_HASH_SALT` e `TURNSTILE_SECRET` no Worker de produção.
+
 ## Scan da árvore de trabalho
 
 J — Um segredo num arquivo novo passa batido se o scanner só lê o que já foi commitado.

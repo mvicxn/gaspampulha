@@ -5,6 +5,7 @@ import {
   canonicalPix,
   canonicalWhatsapp,
   cleanLabel,
+  cleanPublicInfo,
   parseActive,
   parsePrice,
   parseSort,
@@ -58,4 +59,13 @@ test("log não leva a chave pix", () => {
   } as never);
   assert.equal(line.includes("chave-secreta"), false);
   assert.equal(line.includes("31999990000"), false);
+});
+
+test("área e horário aceitam vazio e recusam marcação ou texto longo", () => {
+  assert.equal(cleanPublicInfo(""), "");
+  assert.equal(cleanPublicInfo("  Seg a sáb  "), "Seg a sáb");
+  assert.equal(cleanPublicInfo("<img src=x>"), null);
+  assert.equal(cleanPublicInfo("a\nb"), null);
+  assert.equal(cleanPublicInfo("x".repeat(161)), null);
+  assert.equal(cleanPublicInfo(undefined), null);
 });

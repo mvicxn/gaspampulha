@@ -9,7 +9,9 @@ export interface CatalogRow {
   sort_order: number;
 }
 
-const PUBLIC_SETTINGS = ["store_name", "whatsapp_number"] as const;
+// Default from seed/seed.sql, not a store number: never offer it to customers.
+export const SEED_EXAMPLE_WHATSAPP = "5531999990000";
+const PUBLIC_SETTINGS = ["store_name", "whatsapp_number", "service_area", "opening_hours"] as const;
 
 export function toPublicCatalog(
   rows: CatalogRow[],
@@ -34,9 +36,14 @@ export function toPublicCatalog(
     categories[item.category].push(item);
   }
   const storeName = settings.store_name ?? "";
-  const whatsapp = settings.whatsapp_number ?? "";
+  const whatsapp = settings.whatsapp_number === SEED_EXAMPLE_WHATSAPP ? "" : (settings.whatsapp_number ?? "");
   return {
-    store: { name: storeName, whatsapp },
+    store: {
+      name: storeName,
+      whatsapp,
+      serviceArea: settings.service_area ?? "",
+      openingHours: settings.opening_hours ?? "",
+    },
     categories,
   };
 }
@@ -53,7 +60,7 @@ export async function loadCatalog(db: D1Database): Promise<CatalogResponse> {
   const settings = await db
     .prepare(
       `SELECT key, value FROM settings
-       WHERE key IN ('store_name', 'whatsapp_number')`,
+       WHERE key IN ('store_name', 'whatsapp_number', 'service_area', 'opening_hours')`,
     )
     .all<{ key: string; value: string }>();
   const allowed = new Set<string>(PUBLIC_SETTINGS);

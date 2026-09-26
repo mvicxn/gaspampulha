@@ -1,8 +1,10 @@
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { spawnSync } from "node:child_process";
-import { PRODUCTION_PLACEHOLDER, TEST_SITEKEY, TEST_TURNSTILE_SECRETS, assertDeployment, assertPreviewUrlsOff, assertRemoteVersionUrlsOff } from "./deployment-env.mjs";
+import { PRODUCTION_PLACEHOLDER, TEST_SITEKEY, TEST_TURNSTILE_SECRETS, assertDeployment, assertPreviewUrlsOff, assertRemoteVersionUrlsOff, remoteSecretNames } from "./deployment-env.mjs";
 import { scanTree } from "./secret-scan.mjs";
+
+const keepRemoteSecrets = process.env.GASP_KEEP_REMOTE_SECRETS === "1";
 
 function readRemotePreviewState() {
   const toml = readFileSync(`${homedir()}/.config/.wrangler/config/default.toml`, "utf8");
@@ -105,21 +107,29 @@ if (target.startsWith("production")) {
     console.error("deploy de produção exige GASP_CONFIRM_DEPLOY igual ao database_id. Não houve deploy.");
     process.exit(1);
   }
-  const secretsFile = process.env.GASP_SECRETS_FILE ?? "";
-  if (!secretsFile || secretsFile.startsWith("/home/mm-lab-corp/gaspampulha")) {
-    console.error("secret de produção ausente. Não houve deploy.");
-    process.exit(1);
-  }
-  const secretText = readFileSync(secretsFile, "utf8");
-  const secretMap = Object.fromEntries(secretText.split("\n").filter((line) => line.includes("=")).map((line) => {
-    const index = line.indexOf("=");
-    return [line.slice(0, index), line.slice(index + 1)];
-  }));
-  const saltPrefix = "AUDIT_HASH_" + "SALT=";
-  const localSalt = readFileSync(".dev.vars", "utf8").split("\n").find((line) => line.startsWith(saltPrefix))?.slice(saltPrefix.length) ?? "";
-  if (!secretMap.TURNSTILE_SECRET || !secretMap.AUDIT_HASH_SALT || TEST_TURNSTILE_SECRETS.includes(secretMap.TURNSTILE_SECRET) || secretMap.AUDIT_HASH_SALT === localSalt) {
-    console.error("secret de produção ausente, de teste, ou igual ao salt local. Não houve deploy.");
-    process.exit(1);
+  if (keepRemoteSecrets) {
+    const names = remoteSecretNames();
+    if (!names.includes("TURNSTILE_SECRET") || !names.includes("AUDIT_HASH_SALT")) {
+      console.error("o Worker de produção não tem TURNSTILE_SECRET e AUDIT_HASH_SALT. Não houve deploy.");
+      process.exit(1);
+    }
+  } else {
+    const secretsFile = process.env.GASP_SECRETS_FILE ?? "";
+    if (!secretsFile || secretsFile.startsWith("/home/mm-lab-corp/gaspampulha")) {
+      console.error("secret de produção ausente. Não houve deploy.");
+      process.exit(1);
+    }
+    const secretText = readFileSync(secretsFile, "utf8");
+    const secretMap = Object.fromEntries(secretText.split("\n").filter((line) => line.includes("=")).map((line) => {
+      const index = line.indexOf("=");
+      return [line.slice(0, index), line.slice(index + 1)];
+    }));
+    const saltPrefix = "AUDIT_HASH_" + "SALT=";
+    const localSalt = readFileSync(".dev.vars", "utf8").split("\n").find((line) => line.startsWith(saltPrefix))?.slice(saltPrefix.length) ?? "";
+    if (!secretMap.TURNSTILE_SECRET || !secretMap.AUDIT_HASH_SALT || TEST_TURNSTILE_SECRETS.includes(secretMap.TURNSTILE_SECRET) || secretMap.AUDIT_HASH_SALT === localSalt) {
+      console.error("secret de produção ausente, de teste, ou igual ao salt local. Não houve deploy.");
+      process.exit(1);
+    }
   }
   if (!existsSync("dist") || scanTree("dist").length > 0) {
     console.error("build ausente ou com segredo. Não houve deploy.");
@@ -140,6 +150,8 @@ if (target !== "preview" && target !== "production") {
 }
 const args = target === "preview"
   ? ["wrangler", "preview"]
-  : ["wrangler", "deploy", "--secrets-file", process.env.GASP_SECRETS_FILE];
+  : keepRemoteSecrets
+    ? ["wrangler", "deploy"]
+    : ["wrangler", "deploy", "--secrets-file", process.env.GASP_SECRETS_FILE];
 const result = spawnSync("npx", args, { stdio: "inherit" });
 process.exit(result.status ?? 1);

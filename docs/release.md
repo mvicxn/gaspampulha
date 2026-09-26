@@ -44,9 +44,18 @@ A sitekey de preview é a de teste. A secret normal é a always-pass. A always-f
 
 ## Produção
 
-O `database_id` principal continua `00000000-0000-0000-0000-000000000000`. O banco não existe. `npm run deploy` chama `scripts/guard-remote.mjs production` e para se o id for esse placeholder, se for igual ao do preview, se a sitekey do bloco `vars` for a de teste, ou se `TURNSTILE_SECRET` ou `AUDIT_HASH_SALT` aparecerem em `vars`. Os placeholders ficam de propósito.
+D1 `gaspampulha-production`. `npm run deploy` chama `scripts/guard-remote.mjs production`. Ele para se o id for o placeholder ou igual ao do preview, se a sitekey de `vars` for a de teste, se secret aparecer em `vars`, se `preview_urls` não for `false` ou se a Version URL remota estiver ligada.
 
-Quando for a hora, um humano cria outro D1, troca o id, configura sitekey e secrets reais, e só então roda `npm run deploy`. Sem DNS nesta etapa.
+Os secrets já gravados no Worker são mantidos por padrão:
+
+```
+GASP_KEEP_REMOTE_SECRETS=1 npm run predeploy
+GASP_CONFIRM_DEPLOY=<database_id de produção> GASP_KEEP_REMOTE_SECRETS=1 npm run deploy
+```
+
+Nesse modo o guard confere por `wrangler secret list` que `TURNSTILE_SECRET` e `AUDIT_HASH_SALT` existem e roda `wrangler deploy` sem `--secrets-file`. Trocar um secret continua sendo `GASP_SECRETS_FILE=<arquivo fora do repo>`. Trocar `AUDIT_HASH_SALT` muda os hashes do audit a partir dali.
+
+Migration nova vai antes do deploy: `npx wrangler d1 migrations apply gaspampulha-production --remote`. As migrations só inserem ou alteram de forma compatível com a versão no ar.
 
 ## Build e testes
 

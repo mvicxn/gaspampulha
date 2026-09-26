@@ -1,5 +1,6 @@
 import type { OrderConfirmation } from "../shared/types.ts";
 import { formatBrl } from "./cart.ts";
+import SiteHeader from "./SiteHeader.tsx";
 
 const LABELS = { pix: "PIX", dinheiro: "Dinheiro", cartao: "Cartão" } as const;
 
@@ -7,7 +8,9 @@ export default function Confirmation({ code }: { code: string }) {
   const raw = sessionStorage.getItem(`gaspampulha.order.${code}`);
   const order = raw ? (JSON.parse(raw) as OrderConfirmation) : null;
   return (
-    <main>
+    <>
+    <SiteHeader />
+    <main className="page">
       <p className="mark">Pedido realizado</p>
       <h1>Código {code}</h1>
       {order ? (
@@ -23,9 +26,11 @@ export default function Confirmation({ code }: { code: string }) {
       ) : (
         <p className="muted">O resumo deste pedido está neste aparelho somente logo após o envio.</p>
       )}
+      <p className="muted">Guarde o código. Ele identifica o seu pedido junto à loja.</p>
       <a className="continue link" href="/">
-        Voltar à loja
+        Voltar ao início
       </a>
     </main>
+    </>
   );
 }

@@ -42,7 +42,7 @@ writeFileSync(
   `INSERT INTO admin_users (username, password_hash) VALUES ('${safeUser}', '${safeHash}');\n`,
 );
 const args = target === "local"
-  ? ["wrangler", "d1", "execute", "gaspampulha", "--local", `--file=${file}`]
+  ? ["wrangler", "d1", "execute", "DB", "--local", `--file=${file}`]
   : ["wrangler", "d1", "execute", "gaspampulha-production", "--remote", `--file=${file}`];
 const result = spawnSync("npx", args, { stdio: "inherit" });
 rmSync(directory, { recursive: true, force: true });

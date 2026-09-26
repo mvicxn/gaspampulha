@@ -19,6 +19,15 @@ const NAME_MAX = 80;
 const PRICE_MAX = 1_000_000;
 const SORT_MAX = 999;
 const PIX_MAX = 77;
+const INFO_MAX = 160;
+const SETTING_KEYS = [
+  "store_name",
+  "whatsapp_number",
+  "pix_key",
+  "delivery_whatsapp_number",
+  "service_area",
+  "opening_hours",
+] as const;
 
 function pepper(env: AdminEnv): string {
   return requireSecret(env, "AUDIT_HASH_SALT");
@@ -61,6 +70,14 @@ export function canonicalWhatsapp(value: unknown): string | null {
   const digits = value.replace(/\D/g, "");
   if (digits.length < 10 || digits.length > 13) return null;
   return digits;
+}
+
+export function cleanPublicInfo(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (trimmed.length > INFO_MAX) return null;
+  if (/[\u0000-\u001F\u007F<>]/.test(trimmed)) return null;
+  return trimmed;
 }
 
 export function canonicalPix(value: unknown): string | null {
@@ -281,24 +298,26 @@ async function updateProduct(
   return Response.json({ ok: true, csrfToken: csrf.token }, { headers: { "x-log-event": event } });
 }
 
+const KEY_LIST = SETTING_KEYS.map((key) => `'${key}'`).join(", ");
+
 async function readSettings(env: AdminEnv): Promise<Response> {
-  const rows = await env.DB.prepare(
-    `SELECT key, value, version FROM settings WHERE key IN ('store_name', 'whatsapp_number', 'pix_key', 'delivery_whatsapp_number')`,
-  ).all<{ key: string; value: string; version: number }>();
+  const rows = await env.DB.prepare(`SELECT key, value, version FROM settings WHERE key IN (${KEY_LIST})`).all<{
+    key: string;
+    value: string;
+    version: number;
+  }>();
   const settings: Record<string, { value: string; version: number }> = {};
   for (const row of rows.results) settings[row.key] = { value: row.value, version: row.version };
+  const versions = Object.fromEntries(SETTING_KEYS.map((key) => [key, settings[key]?.version ?? 1]));
   return Response.json(
     {
       storeName: settings.store_name?.value ?? "",
       whatsappNumber: settings.whatsapp_number?.value ?? "",
       pixKey: settings.pix_key?.value ?? "",
       deliveryWhatsappNumber: settings.delivery_whatsapp_number?.value ?? "",
-      versions: {
-        store_name: settings.store_name?.version ?? 1,
-        whatsapp_number: settings.whatsapp_number?.version ?? 1,
-        pix_key: settings.pix_key?.version ?? 1,
-        delivery_whatsapp_number: settings.delivery_whatsapp_number?.version ?? 1,
-      },
+      serviceArea: settings.service_area?.value ?? "",
+      openingHours: settings.opening_hours?.value ?? "",
+      versions,
     },
     { headers: { "x-log-event": "SETTINGS_READ_SUCCESS" } },
   );
@@ -317,7 +336,7 @@ async function writeSettings(
     return fail(400, requestId, "SETTINGS_VALIDATION_REJECTED");
   }
   const fields = body as Record<string, unknown>;
-  if (Object.keys(fields).some((key) => !["store_name", "whatsapp_number", "pix_key", "delivery_whatsapp_number", "versions"].includes(key))) {
+  if (Object.keys(fields).some((key) => key !== "versions" && !(SETTING_KEYS as readonly string[]).includes(key))) {
     return fail(400, requestId, "SETTINGS_VALIDATION_REJECTED");
   }
   const versions = fields.versions;
@@ -325,55 +344,51 @@ async function writeSettings(
     return fail(400, requestId, "SETTINGS_VALIDATION_REJECTED");
   }
   const versionFields = versions as Record<string, unknown>;
-  if (Object.keys(versionFields).some((key) => !["store_name", "whatsapp_number", "pix_key", "delivery_whatsapp_number"].includes(key))) {
+  if (Object.keys(versionFields).some((key) => !(SETTING_KEYS as readonly string[]).includes(key))) {
     return fail(400, requestId, "SETTINGS_VALIDATION_REJECTED");
   }
-  const storeName = cleanLabel(fields.store_name, NAME_MAX);
-  const whatsapp = canonicalWhatsapp(fields.whatsapp_number);
-  const pix = canonicalPix(fields.pix_key);
-  const delivery =
-    typeof fields.delivery_whatsapp_number === "string" && fields.delivery_whatsapp_number.trim() === ""
-      ? ""
-      : canonicalWhatsapp(fields.delivery_whatsapp_number);
-  const storeVersion = versionFields.store_name;
-  const whatsappVersion = versionFields.whatsapp_number;
-  const pixVersion = versionFields.pix_key;
-  const deliveryVersion = versionFields.delivery_whatsapp_number;
-  if (
-    !storeName ||
-    !whatsapp ||
-    pix === null ||
-    delivery === null ||
-    typeof storeVersion !== "number" ||
-    typeof whatsappVersion !== "number" ||
-    typeof pixVersion !== "number" ||
-    typeof deliveryVersion !== "number"
-  ) {
+  const values: Record<(typeof SETTING_KEYS)[number], string | null> = {
+    store_name: cleanLabel(fields.store_name, NAME_MAX),
+    whatsapp_number: canonicalWhatsapp(fields.whatsapp_number),
+    pix_key: canonicalPix(fields.pix_key),
+    delivery_whatsapp_number:
+      typeof fields.delivery_whatsapp_number === "string" && fields.delivery_whatsapp_number.trim() === ""
+        ? ""
+        : canonicalWhatsapp(fields.delivery_whatsapp_number),
+    service_area: cleanPublicInfo(fields.service_area),
+    opening_hours: cleanPublicInfo(fields.opening_hours),
+  };
+  if (!values.store_name || !values.whatsapp_number) return fail(400, requestId, "SETTINGS_VALIDATION_REJECTED");
+  if (SETTING_KEYS.some((key) => values[key] === null)) return fail(400, requestId, "SETTINGS_VALIDATION_REJECTED");
+  const expected = SETTING_KEYS.map((key) => versionFields[key]);
+  if (expected.some((version) => typeof version !== "number" || !Number.isInteger(version))) {
     return fail(400, requestId, "SETTINGS_VALIDATION_REJECTED");
   }
   const denied = await useCsrf(request, env, session, now, requestId);
   if (denied) return denied;
   const stamp = now.toISOString();
   const csrf = await nextCsrf(env);
+  const count = SETTING_KEYS.length;
+  const cases = SETTING_KEYS.map((key, index) => `WHEN '${key}' THEN ?${index + 1}`).join("\n         ");
+  const guard = SETTING_KEYS.map((key, index) => `(key = '${key}' AND version = ?${count + index + 1})`).join("\n              OR ");
+  const after = SETTING_KEYS.map((key) => (key === "store_name" ? `(key = '${key}' AND version = ? AND value = ?)` : `(key = '${key}' AND version = ?)`)).join("\n           OR ");
+  const afterBinds = SETTING_KEYS.flatMap((key, index) => {
+    const next = (expected[index] as number) + 1;
+    return key === "store_name" ? [next, values.store_name] : [next];
+  });
   const result = await env.DB.batch([
     env.DB.prepare(
       `UPDATE settings
        SET value = CASE key
-         WHEN 'store_name' THEN ?1
-         WHEN 'whatsapp_number' THEN ?2
-         WHEN 'pix_key' THEN ?3
-         WHEN 'delivery_whatsapp_number' THEN ?4
+         ${cases}
        END,
        version = version + 1
-       WHERE key IN ('store_name', 'whatsapp_number', 'pix_key', 'delivery_whatsapp_number')
+       WHERE key IN (${KEY_LIST})
          AND (
            SELECT COUNT(*) FROM settings
-           WHERE (key = 'store_name' AND version = ?5)
-              OR (key = 'whatsapp_number' AND version = ?6)
-              OR (key = 'pix_key' AND version = ?7)
-              OR (key = 'delivery_whatsapp_number' AND version = ?8)
-         ) = 4`,
-    ).bind(storeName, whatsapp, pix, delivery, storeVersion, whatsappVersion, pixVersion, deliveryVersion),
+           WHERE ${guard}
+         ) = ${count}`,
+    ).bind(...SETTING_KEYS.map((key) => values[key]), ...expected),
     env.DB.prepare(
       `INSERT INTO audit_events (
         event_id, occurred_at, actor_type, actor_id, action, resource_type, resource_id, outcome, request_id, metadata_json
@@ -381,22 +396,15 @@ async function writeSettings(
       SELECT ?, ?, 'admin', ?, 'SETTINGS_UPDATED', 'settings', 'store', 'success', ?, ?
       WHERE (
         SELECT COUNT(*) FROM settings
-        WHERE (key = 'store_name' AND version = ? AND value = ?)
-           OR (key = 'whatsapp_number' AND version = ?)
-           OR (key = 'pix_key' AND version = ?)
-           OR (key = 'delivery_whatsapp_number' AND version = ?)
-      ) = 4`,
+        WHERE ${after}
+      ) = ${count}`,
     ).bind(
       crypto.randomUUID(),
       stamp,
       session.adminId,
       requestId,
-      JSON.stringify({ fields_changed: ["store_name", "whatsapp_number", "pix_key", "delivery_whatsapp_number"] }),
-      storeVersion + 1,
-      storeName,
-      whatsappVersion + 1,
-      pixVersion + 1,
-      deliveryVersion + 1,
+      JSON.stringify({ fields_changed: SETTING_KEYS }),
+      ...afterBinds,
     ),
     env.DB.prepare("INSERT INTO csrf_tokens (token_hash, session_token_hash, expires_at) VALUES (?, ?, ?)").bind(
       csrf.hash,
@@ -404,6 +412,6 @@ async function writeSettings(
       session.expiresAt,
     ),
   ]);
-  if ((result[0]?.meta?.changes ?? 0) !== 4) return fail(409, requestId, "ADMIN_CONFLICT");
+  if ((result[0]?.meta?.changes ?? 0) !== count) return fail(409, requestId, "ADMIN_CONFLICT");
   return Response.json({ ok: true, csrfToken: csrf.token }, { headers: { "x-log-event": "SETTINGS_UPDATE_SUCCESS" } });
 }

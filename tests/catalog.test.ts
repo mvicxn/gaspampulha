@@ -12,7 +12,7 @@ import {
   removeItem,
   toCheckoutDraft,
 } from "../src/cart.ts";
-import { toPublicCatalog, type CatalogRow } from "../worker/catalog.ts";
+import { SEED_EXAMPLE_WHATSAPP, toPublicCatalog, type CatalogRow } from "../worker/catalog.ts";
 
 function row(partial: Partial<CatalogRow> & Pick<CatalogRow, "id" | "name" | "category">): CatalogRow {
   return {
@@ -26,7 +26,7 @@ function row(partial: Partial<CatalogRow> & Pick<CatalogRow, "id" | "name" | "ca
 test("catálogo vazio e só settings públicas", () => {
   const catalog = toPublicCatalog([], { store_name: "Loja", whatsapp_number: "5531", pix_key: "segredo" });
   assert.deepEqual(catalog.categories, { agua: [], gas: [] });
-  assert.deepEqual(catalog.store, { name: "Loja", whatsapp: "5531" });
+  assert.deepEqual(catalog.store, { name: "Loja", whatsapp: "5531", serviceArea: "", openingHours: "" });
   assert.equal(JSON.stringify(catalog).includes("pix_key"), false);
   assert.equal(JSON.stringify(catalog).includes("segredo"), false);
 });
@@ -102,4 +102,14 @@ test("reconcilia inativo e ignora preço gravado no navegador", () => {
   const draft: CheckoutDraft = toCheckoutDraft(reconciled);
   assert.deepEqual(draft, { items: [{ productId: 1, quantity: 2 }] });
   assert.equal(JSON.stringify(draft).includes("price"), false);
+});
+
+test("catálogo publica área e horário e esconde o WhatsApp de exemplo do seed", () => {
+  const catalog = toPublicCatalog([], {
+    store_name: "Loja",
+    whatsapp_number: SEED_EXAMPLE_WHATSAPP,
+    service_area: "Centro",
+    opening_hours: "Seg a sáb",
+  });
+  assert.deepEqual(catalog.store, { name: "Loja", whatsapp: "", serviceArea: "Centro", openingHours: "Seg a sáb" });
 });

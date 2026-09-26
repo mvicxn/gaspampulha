@@ -6,13 +6,11 @@ Um banco D1, binding `DB`. Sem segundo tenant, sem KV, sem Redis.
 
 ## O que está no ar
 
-- `GET /api/health`
-- `GET /api/catalog` lê produtos ativos e só `store_name` e `whatsapp_number`
-- Carrinho no navegador (`productId` e `quantity`). Preço de exibição vem do catálogo, em centavos
-- Migration `0001` e `0002`
-- Tipos em `shared/types.ts`, incluindo `CheckoutDraft` sem preço
-
-Checkout, Turnstile no pedido, sessão de uso e painel ainda não existem.
+- `/` é a landing: produtos com preço do catálogo, pedido direto para o checkout, área, horário e contato. `/inicio` abre a mesma página
+- `/loja` é a loja com carrinho. `/checkout`, `/pedido/:code` e `/admin/*` seguem iguais
+- `GET /api/health` e `GET /api/catalog`. O catálogo publica produtos ativos e só `store_name`, `whatsapp_number`, `service_area` e `opening_hours`. O WhatsApp de exemplo do seed volta vazio
+- Carrinho no navegador (`productId` e `quantity`, chave `gaspampulha.cart`). Preço de exibição vem do catálogo, em centavos
+- Migrations `0001` a `0007`
 
 ## Pedido
 

@@ -29,11 +29,11 @@ test("link do entregador só aceita dígitos e não usa url arbitrária", () => 
 test("número do entregador não entra no catálogo público", () => {
   const catalog = toPublicCatalog([] as CatalogRow[], {
     store_name: "Loja",
-    whatsapp_number: "5531999990000",
+    whatsapp_number: "5531988880000",
     delivery_whatsapp_number: "553188887777",
   });
   assert.equal(JSON.stringify(catalog).includes("553188887777"), false);
-  assert.equal(catalog.store.whatsapp, "5531999990000");
+  assert.equal(catalog.store.whatsapp, "5531988880000");
 });
 
 test("auditoria sem sessão responde 401", async () => {

@@ -1,3 +1,5 @@
+import { spawnSync } from "node:child_process";
+
 export const TEST_SITEKEY = "1x00000000000000000000AA";
 export const TEST_TURNSTILE_SECRETS = [
   "1x0000000000000000000000000000000AA",
@@ -57,4 +59,15 @@ export function assertDeployment(spec) {
   }
   if (errors.length > 0) throw new Error(errors.join(","));
   return environment;
+}
+
+export function remoteSecretNames() {
+  const result = spawnSync("npx", ["wrangler", "secret", "list", "--format", "json"], { encoding: "utf8" });
+  if (result.status !== 0) return [];
+  try {
+    const list = JSON.parse(result.stdout.slice(result.stdout.indexOf("[")));
+    return Array.isArray(list) ? list.map((entry) => entry?.name).filter((name) => typeof name === "string") : [];
+  } catch {
+    return [];
+  }
 }

@@ -5,6 +5,7 @@ export interface CartItem {
   quantity: number;
 }
 
+export const CART_KEY = "gaspampulha.cart";
 export const CART_MIN = 1;
 export const CART_MAX = 20;
 
